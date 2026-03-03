@@ -153,6 +153,63 @@ else
     FAIL=$((FAIL + 1))
 fi
 
+# Test 6: Compile + run Generator.hpp unit tests with C++14
+echo "[TEST 6] Compile + run test_generator.cpp with C++14..."
+if g++ -std=c++14 -I"$ROOT_DIR/src" -o "$SCRIPT_DIR/test_generator_c14" "$SCRIPT_DIR/test_generator.cpp" 2>&1; then
+    OUTPUT=$("$SCRIPT_DIR/test_generator_c14" 2>&1)
+    EXIT_CODE=$?
+    echo "$OUTPUT" | tail -3
+    if [ $EXIT_CODE -eq 0 ]; then
+        echo "  PASS: test_generator (C++14) all assertions passed"
+        PASS=$((PASS + 1))
+    else
+        echo "  FAIL: test_generator (C++14) had failures"
+        FAIL=$((FAIL + 1))
+    fi
+    rm -f "$SCRIPT_DIR/test_generator_c14"
+else
+    echo "  FAIL: test_generator.cpp does not compile with C++14"
+    FAIL=$((FAIL + 1))
+fi
+
+# Test 7: Compile + run Generator.hpp unit tests with C++17
+echo "[TEST 7] Compile + run test_generator.cpp with C++17..."
+if g++ -std=c++17 -I"$ROOT_DIR/src" -o "$SCRIPT_DIR/test_generator_c17" "$SCRIPT_DIR/test_generator.cpp" 2>&1; then
+    OUTPUT=$("$SCRIPT_DIR/test_generator_c17" 2>&1)
+    EXIT_CODE=$?
+    echo "$OUTPUT" | tail -3
+    if [ $EXIT_CODE -eq 0 ]; then
+        echo "  PASS: test_generator (C++17) all assertions passed"
+        PASS=$((PASS + 1))
+    else
+        echo "  FAIL: test_generator (C++17) had failures"
+        FAIL=$((FAIL + 1))
+    fi
+    rm -f "$SCRIPT_DIR/test_generator_c17"
+else
+    echo "  FAIL: test_generator.cpp does not compile with C++17"
+    FAIL=$((FAIL + 1))
+fi
+
+# Test 8: Compile + run Daisy logic unit tests with C++14
+echo "[TEST 8] Compile + run test_daisy_logic.cpp with C++14..."
+if g++ -std=c++14 -I"$ROOT_DIR/src" -I"$ROOT_DIR/daisy/src" -o "$SCRIPT_DIR/test_daisy_logic" "$SCRIPT_DIR/test_daisy_logic.cpp" 2>&1; then
+    OUTPUT=$("$SCRIPT_DIR/test_daisy_logic" 2>&1)
+    EXIT_CODE=$?
+    echo "$OUTPUT" | tail -3
+    if [ $EXIT_CODE -eq 0 ]; then
+        echo "  PASS: test_daisy_logic all assertions passed"
+        PASS=$((PASS + 1))
+    else
+        echo "  FAIL: test_daisy_logic had failures"
+        FAIL=$((FAIL + 1))
+    fi
+    rm -f "$SCRIPT_DIR/test_daisy_logic"
+else
+    echo "  FAIL: test_daisy_logic.cpp does not compile with C++14"
+    FAIL=$((FAIL + 1))
+fi
+
 echo ""
 echo "=== Results: $PASS passed, $FAIL failed ==="
 

@@ -1,6 +1,6 @@
 #include "daisy_patch.h"
 #include "daisysp.h"
-#include "Generator.hpp"
+#include "daisy_logic.hpp"
 #include <cstring>
 #include <cstdio>
 
@@ -64,10 +64,8 @@ static uint8_t midiChannel = 0; // 0-indexed (channel 1)
 static int lastMidiNote = -1;
 static bool lastNoteHadSlide = false;
 
-// Timing constants
-static constexpr float GATE_DURATION = 0.020f;    // 20ms normal gate
+// Timing constants (GATE_DURATION_S and SLIDE_TIME_S are in daisy_logic.hpp)
 static constexpr float RETRIGGER_GAP = 0.001f;    // 1ms retrigger gap
-static constexpr float SLIDE_TIME = 0.050f;        // 50ms portamento
 static constexpr float DISPLAY_UPDATE_RATE = 0.016f; // ~60fps
 
 // Note names for display
@@ -88,22 +86,13 @@ static const char* SCALE_ABBR[] = {
 //-----------------------------------------------------------------------------
 
 static void sendMidiNoteOn(uint8_t note, bool accent) {
-    uint8_t velocity = accent ? 127 : 60;
-    uint8_t data[3] = {
-        static_cast<uint8_t>(0x90 | (midiChannel & 0x0F)),
-        static_cast<uint8_t>(note & 0x7F),
-        velocity
-    };
-    midi.SendMessage(data, 3);
+    MidiMsg msg = makeNoteOn(note, accent, midiChannel);
+    midi.SendMessage(msg.data, msg.length);
 }
 
 static void sendMidiNoteOff(uint8_t note) {
-    uint8_t data[3] = {
-        static_cast<uint8_t>(0x80 | (midiChannel & 0x0F)),
-        static_cast<uint8_t>(note & 0x7F),
-        0
-    };
-    midi.SendMessage(data, 3);
+    MidiMsg msg = makeNoteOff(note, midiChannel);
+    midi.SendMessage(msg.data, msg.length);
 }
 
 //-----------------------------------------------------------------------------
@@ -148,31 +137,21 @@ static void advanceStep() {
         }
         lastNoteHadSlide = false;
     } else {
-        // Calculate MIDI note
-        int midiNote = getNoteInScale(step.note, currentScale, rootNote, step.octave + baseOctave);
-        // Shift to reasonable MIDI range (C2 = 36)
-        midiNote += 48;
-
-        // Clamp to valid MIDI range
-        if (midiNote < 0) midiNote = 0;
-        if (midiNote > 127) midiNote = 127;
-
-        // Calculate pitch voltage (1V/oct, 0V = C2 = MIDI 36)
-        float targetPitch = static_cast<float>(midiNote - 36) / 12.0f;
+        // Calculate MIDI note and pitch voltage
+        int midiNote = calculateMidiNote(step, currentScale, rootNote, baseOctave);
+        float targetPitch = calculatePitchVoltage(midiNote);
 
         if (currentSlideActive) {
             // Slide from current pitch to new pitch
             slideTargetPitch = targetPitch;
-            slideRate = (slideTargetPitch - currentPitch) / SLIDE_TIME;
+            slideRate = calculateSlideRate(currentPitch, slideTargetPitch);
             // No gate retrigger (legato)
         } else {
             // Normal note - retrigger gate
             currentPitch = targetPitch;
             slideTargetPitch = targetPitch;
             gateHigh = true;
-            gateTimer = step.slide ?
-                measuredClockPeriod * 1.1f :  // Extended gate for slide
-                GATE_DURATION;                 // Normal short gate
+            gateTimer = calculateGateDuration(step.slide, measuredClockPeriod);
         }
 
         // Accent
@@ -291,16 +270,13 @@ static void AudioCallback(AudioHandle::InputBuffer in,
         }
 
         // Output CV 1: Pitch (0-5V range via DAC)
-        // DAC outputs 0-5V. Map 0V = C2, 5V = C7 (5 octaves)
-        float pitchVoltage = currentPitch;
-        pitchVoltage = pitchVoltage < 0.0f ? 0.0f : (pitchVoltage > 5.0f ? 5.0f : pitchVoltage);
+        uint16_t pitchDac = pitchToDac(currentPitch);
 
         // Output CV 2: Accent (0V or 5V)
         float accentVoltage = accentHigh ? 1.0f : 0.0f;
 
-        // Write to DAC (CV outputs are 0.0 - 1.0 normalized)
-        patch.seed.dac.WriteValue(DacHandle::Channel::ONE,
-            static_cast<uint16_t>(pitchVoltage / 5.0f * 4095.0f));
+        // Write to DAC
+        patch.seed.dac.WriteValue(DacHandle::Channel::ONE, pitchDac);
         patch.seed.dac.WriteValue(DacHandle::Channel::TWO,
             static_cast<uint16_t>(accentVoltage * 4095.0f));
 
