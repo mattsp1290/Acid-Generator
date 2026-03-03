@@ -11,16 +11,17 @@ Create a thorough, production-ready task graph. Include all necessary setup, imp
 ## Project Information
 
 ### Links to Relevant Documentation
-{PLEASE FILL THIS OUT}
+- https://daisy.audio/product/Daisy-Patch/
+- https://github.com/VCVRack/Rack
+- https://abstraktinstruments.com/content/manuals/Avalon_Reference_Manual_1.07a.pdf
 
 ### Project Description
-{PLEASE FILL THIS OUT}
-
-### Technical Stack
-{PLEASE FILL THIS OUT}
+This current project is meant for VCV Rack. We want to revamp this project to support Daisy Patch. Note trigger for our acid sequence should come out of gate output 1. The accent trigger should come out of CV 2. The pitch information will come out of CV 1. 
+It should also output midi compatible with the Avalon Bassline. 
 
 ### Specific Requirements
-{PLEASE FILL THIS OUT}
+- Our project can compile for the Daisy Patch
+- The Daisy Patch displays a piano roll view of the current sequence
 
 ---
 
