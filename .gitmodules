@@ -1,0 +1,6 @@
+[submodule "daisy/lib/libDaisy"]
+	path = daisy/lib/libDaisy
+	url = https://github.com/electro-smith/libDaisy.git
+[submodule "daisy/lib/DaisySP"]
+	path = daisy/lib/DaisySP
+	url = https://github.com/electro-smith/DaisySP.git

@@ -113,7 +113,8 @@ struct ScaleData {
 };
 
 // Compile-time scale definitions - no heap allocation
-inline const ScaleData SCALES[] = {
+// Use static constexpr for C++14 compatibility (inline variables are C++17)
+static constexpr ScaleData SCALES[] = {
     // MAJOR
     {{0, 2, 4, 5, 7, 9, 11, -1, -1, -1, -1, -1}, 7},
     // MINOR

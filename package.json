@@ -7,7 +7,8 @@
     "dev": "vite --mode dev",
     "build": "tsc && vite build --mode prod",
     "lint": "eslint src --ext ts,tsx --report-unused-disable-directives --max-warnings 0 --fix",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test": "bash tests/run_tests.sh"
   },
   "dependencies": {
     "@piwikpro/react-piwik-pro": "1.1.1",
